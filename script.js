@@ -30,6 +30,15 @@ document.addEventListener("DOMContentLoaded", function () {
             const checked = localStorage.getItem(`${currentUser}-task${index}`);
             checkbox.checked = checked === "true";
         });
+
+        // 알림 권한 요청
+        if (Notification.permission !== "granted") {
+            Notification.requestPermission().then(permission => {
+                if (permission === "granted") {
+                    console.log("알림 권한이 허용되었습니다.");
+                }
+            });
+        }
     }
 
     // 체크박스 클릭 시 알림 전송
@@ -57,12 +66,6 @@ document.addEventListener("DOMContentLoaded", function () {
     function sendNotification(message) {
         if (Notification.permission === "granted") {
             new Notification("학습 체크 알림", { body: message });
-        } else if (Notification.permission !== "denied") {
-            Notification.requestPermission().then(permission => {
-                if (permission === "granted") {
-                    new Notification("학습 체크 알림", { body: message });
-                }
-            });
         }
     }
 
@@ -74,9 +77,4 @@ document.addEventListener("DOMContentLoaded", function () {
     checkboxes.forEach(checkbox => {
         checkbox.addEventListener("change", handleCheckboxClick);
     });
-
-    // 페이지 로드 시 알림 권한 요청
-    if (Notification.permission !== "granted") {
-        Notification.requestPermission();
-    }
 });
