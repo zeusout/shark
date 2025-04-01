@@ -3,92 +3,551 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>학습 체크</title>
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore-compat.js"></script>
-    <!-- 앱 스크립트 -->
-    <script defer src="script.js"></script>
+    <title>학습 체크 사이트</title>
+    <!-- 최신 카카오 SDK 추가 -->
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.5.0/kakao.min.js"></script>
     <style>
-        body { 
-            font-family: Arial, sans-serif; 
-            margin: 0; padding: 0; 
-            background: linear-gradient(135deg, #74b9ff, #0984e3); 
-            display: flex; align-items: center; justify-content: center; 
-            height: 100vh;
+        body {
+            font-family: 'Arial', sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
         }
-        .container { 
-            max-width: 400px; 
-            width: 90%;
-            background: white; 
-            padding: 20px; 
-            border-radius: 20px; 
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); 
-            text-align: center;
-            transition: all 0.3s ease-in-out;
-        }
-        h2 { margin-bottom: 10px; }
-        .date { 
-            color: gray; 
-            font-size: 14px; 
-            margin-bottom: 15px; 
-        }
-        .user-btns {
-            display: flex;
-            justify-content: space-around;
+        .container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             margin-bottom: 20px;
         }
-        .user-btn {
-            flex: 1;
-            margin: 0 10px;
-            padding: 15px 0;
-            font-size: 18px;
-            font-weight: bold;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background-color: #4CAF50;
             color: white;
-            transition: 0.3s;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
         }
-        .user-btn#jiho { background: linear-gradient(135deg, #74b9ff, #0984e3); }
-        .user-btn#soyeol { background: linear-gradient(135deg, #55efc4, #00cec9); }
-        .user-btn:hover { transform: scale(1.05); }
-        #taskList {
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .btn-user {
+            background-color: #2196F3;
+        }
+        .btn-user:hover {
+            background-color: #0b7dda;
+        }
+        .hidden {
             display: none;
-            margin-top: 20px;
         }
-        .task {
-            display: flex;
-            justify-content: space-between;
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        select, input, textarea {
+            width: 100%;
             padding: 10px;
-            border-bottom: 1px solid #ddd;
+            border: 1px solid #ddd;
+            border-radius: 4px;
             font-size: 16px;
         }
-        input[type="checkbox"] {
-            transform: scale(1.3);
-            cursor: pointer;
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        .back-btn {
+            background-color: #f44336;
+            margin-top: 20px;
+        }
+        .back-btn:hover {
+            background-color: #d32f2f;
+        }
+        .kakao-btn {
+            background-color: #FEE500;
+            color: #000000;
+            font-weight: bold;
+        }
+        .kakao-btn:hover {
+            background-color: #E6CF00;
+        }
+        .channel-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+        .response-alert {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+        }
+        .approved {
+            background-color: #dff0d8;
+            color: #3c763d;
+        }
+        .rejected {
+            background-color: #f2dede;
+            color: #a94442;
+        }
+        .history-item {
+            border-bottom: 1px solid #eee;
+            padding: 10px 0;
+        }
+        .history-item:last-child {
+            border-bottom: none;
+        }
+        .status-pending {
+            color: #8a6d3b;
+            background-color: #fcf8e3;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+        .status-approved {
+            color: #3c763d;
+            background-color: #dff0d8;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+        .status-rejected {
+            color: #a94442;
+            background-color: #f2dede;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+        .manual-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .manual-buttons .btn {
+            width: 48%;
+        }
+        .approve-btn {
+            background-color: #4CAF50;
+        }
+        .reject-btn {
+            background-color: #f44336;
         }
     </style>
 </head>
 <body>
-<div class="container">
-    <h2>학습 체크</h2>
-    <div class="date" id="date"></div>
-    
-    <div class="user-btns">
-        <button id="jiho" class="user-btn">지호</button>
-        <button id="soyeol" class="user-btn">소율</button>
+    <!-- 카카오톡 채널 연동 화면 -->
+    <div id="kakao-channel-container" class="container">
+        <h1>카카오톡 채널 연동</h1>
+        <p>학습 체크 결과를 받으시려면 카카오톡 채널을 추가해주세요:</p>
+        <div id="kakao-add-channel-button" class="channel-container"></div>
+        <div id="kakao-chat-channel-button" class="channel-container"></div>
+        
+        <button class="btn" onclick="showScreen('user-select')">시작하기</button>
+    </div>
+
+    <!-- 응답 알림 -->
+    <div id="response-notification" class="response-alert hidden"></div>
+
+    <!-- 유저 선택 화면 -->
+    <div id="user-select" class="container hidden">
+        <h1>유저를 선택하세요</h1>
+        <button class="btn btn-user" onclick="selectUser('지호')">지호</button>
+        <button class="btn btn-user" onclick="selectUser('소율')">소율</button>
+    </div>
+
+    <!-- 메인 메뉴 화면 -->
+    <div id="main-menu" class="container hidden">
+        <h1><span id="selected-user"></span>의 메뉴</h1>
+        <button class="btn" onclick="showScreen('learning-check')">학습 체크하기</button>
+        <button class="btn" onclick="showScreen('time-request')">핸드폰/컴퓨터 시간 요청하기</button>
+        <button class="btn" onclick="showScreen('request-history')">요청 기록 보기</button>
+        <button class="btn back-btn" onclick="goBack('user-select')">뒤로가기</button>
+    </div>
+
+    <!-- 학습 체크 화면 -->
+    <div id="learning-check" class="container hidden">
+        <h1>학습 체크하기</h1>
+        <form id="learning-form">
+            <div class="form-group">
+                <label for="subject">학습 과목 선택:</label>
+                <select id="subject" required>
+                    <option value="" disabled selected>학습 과목을 선택하세요</option>
+                    <option value="50일 수학 워크북">50일 수학 워크북</option>
+                    <option value="50일 수학 개념책">50일 수학 개념책</option>
+                    <option value="말해보카">말해보카</option>
+                    <option value="실력 단어" id="skill-word-option">실력 단어</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="progress">진행 상황:</label>
+                <select id="progress" required>
+                    <option value="" disabled selected>완료한 수를 선택하세요</option>
+                    <option value="1/4">1/4</option>
+                    <option value="2/4">2/4</option>
+                    <option value="3/4">3/4</option>
+                    <option value="4/4">4/4</option>
+                </select>
+            </div>
+            <button type="submit" class="btn">전송하기</button>
+        </form>
+        <button class="btn back-btn" onclick="goBack('main-menu')">뒤로가기</button>
+    </div>
+
+    <!-- 시간 요청 화면 -->
+    <div id="time-request" class="container hidden">
+        <h1>핸드폰/컴퓨터 시간 요청하기</h1>
+        <form id="time-form">
+            <div class="form-group">
+                <label for="request-time">요청 시간 (분):</label>
+                <input type="number" id="request-time" min="1" max="120" required>
+            </div>
+            <div class="form-group">
+                <label for="reason">요청 이유:</label>
+                <textarea id="reason" placeholder="핸드폰/컴퓨터 시간이 필요한 이유를 적어주세요" required></textarea>
+            </div>
+            <button type="submit" class="btn">전송하기</button>
+        </form>
+        <button class="btn back-btn" onclick="goBack('main-menu')">뒤로가기</button>
     </div>
     
-    <div id="taskList">
-        <div class="task"><span>말해보카</span><input type="checkbox" id="task1"></div>
-        <div class="task"><span>능률보카</span><input type="checkbox" id="task2"></div>
-        <div class="task"><span>50일 수학</span><input type="checkbox" id="task3"></div>
-        <div class="task"><span>50일 수학 워크북</span><input type="checkbox" id="task4"></div>
+    <!-- 결과 공유 화면 -->
+    <div id="share-result" class="container hidden">
+        <h1>결과 공유하기</h1>
+        <p id="result-message"></p>
+        <p><strong>요청 ID: </strong><span id="request-id"></span></p>
+        <button id="share-kakao" class="btn kakao-btn">카카오톡으로 공유하기</button>
+        
+        <!-- 수동 승인/거절 버튼 추가 -->
+        <div class="manual-buttons">
+            <button id="manual-approve" class="btn approve-btn">직접 승인하기</button>
+            <button id="manual-reject" class="btn reject-btn">직접 거절하기</button>
+        </div>
+        
+        <button class="btn back-btn" onclick="goBack('main-menu')">메인으로 돌아가기</button>
     </div>
-</div>
+
+    <!-- 요청 기록 화면 -->
+    <div id="request-history" class="container hidden">
+        <h1>요청 기록</h1>
+        <div id="history-list">
+            <!-- 요청 기록이 여기에 표시됩니다 -->
+            <p id="no-history" class="hidden">요청 기록이 없습니다.</p>
+        </div>
+        <button class="btn back-btn" onclick="goBack('main-menu')">뒤로가기</button>
+    </div>
+
+    <script>
+        let currentUser = '';
+        let currentScreen = 'kakao-channel-container';
+        let resultMessage = '';
+        let currentRequestId = '';
+        
+        // 요청 기록 저장소
+        const requestHistory = JSON.parse(localStorage.getItem('requestHistory') || '{}');
+        
+        // 응답 처리 결과 확인
+        window.onload = function() {
+            // 최신 Kakao SDK 초기화 방식
+            if (!Kakao.isInitialized()) {
+                Kakao.init('d804f2ae7ecd4f0c313b473906da6bb8'); // 발급받은 JavaScript 키 입력
+            }
+            
+            // 채널 버튼 생성
+            displayKakaoButtons();
+            
+            // URL 파라미터에서 응답 확인
+            checkResponseParameters();
+        };
+        
+        // 카카오 버튼 표시 함수
+        function displayKakaoButtons() {
+            try {
+                // 채널 추가 버튼
+                Kakao.Channel.createAddChannelButton({
+                    container: '#kakao-add-channel-button',
+                    channelPublicId: '_ddyxfn', // 채널 ID 입력
+                });
+                
+                // 채널 채팅 버튼
+                Kakao.Channel.createChatButton({
+                    container: '#kakao-chat-channel-button',
+                    channelPublicId: '_ddyxfn', // 채널 ID 입력
+                });
+            } catch (e) {
+                console.error('카카오 버튼 생성 실패:', e);
+                document.getElementById('kakao-add-channel-button').innerHTML = 
+                    '<a href="https://pf.kakao.com/_ddyxfn" target="_blank" class="btn kakao-btn">카카오톡 채널 추가하기</a>';
+                document.getElementById('kakao-chat-channel-button').innerHTML = 
+                    '<a href="https://pf.kakao.com/_ddyxfn/chat" target="_blank" class="btn kakao-btn">카카오톡 채널 채팅하기</a>';
+            }
+        }
+
+        // URL 파라미터 확인 함수
+        function checkResponseParameters() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const requestId = urlParams.get('requestId');
+            const response = urlParams.get('response');
+            
+            if (requestId && response) {
+                const notificationDiv = document.getElementById('response-notification');
+                
+                if (response === 'approve') {
+                    notificationDiv.textContent = '요청이 승인되었습니다!';
+                    notificationDiv.className = 'response-alert approved';
+                    updateRequestStatus(requestId, 'approved');
+                } else if (response === 'reject') {
+                    notificationDiv.textContent = '요청이 거절되었습니다.';
+                    notificationDiv.className = 'response-alert rejected';
+                    updateRequestStatus(requestId, 'rejected');
+                }
+                
+                notificationDiv.classList.remove('hidden');
+                
+                // 3초 후 알림 숨기기
+                setTimeout(function() {
+                    notificationDiv.classList.add('hidden');
+                }, 5000);
+                
+                // URL에서 파라미터 제거 (브라우저 히스토리에는 남음)
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+        // 유저 선택 함수
+        function selectUser(user) {
+            currentUser = user;
+            document.getElementById('selected-user').textContent = user;
+            
+            // 실력 단어 옵션 처리 (지호만 볼 수 있음)
+            const skillWordOption = document.getElementById('skill-word-option');
+            if (user === '지호') {
+                skillWordOption.style.display = 'block';
+            } else {
+                skillWordOption.style.display = 'none';
+            }
+            
+            showScreen('main-menu');
+        }
+
+        // 화면 전환 함수
+        function showScreen(screenId) {
+            document.getElementById(currentScreen).classList.add('hidden');
+            document.getElementById(screenId).classList.remove('hidden');
+            currentScreen = screenId;
+            
+            // 요청 기록 화면인 경우 히스토리 표시
+            if (screenId === 'request-history') {
+                displayRequestHistory();
+            }
+        }
+
+        // 뒤로가기 함수
+        function goBack(screenId) {
+            showScreen(screenId);
+        }
+
+        // 고유 ID 생성 함수
+        function generateRequestId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
+        }
+
+        // 요청 상태 업데이트 함수
+        function updateRequestStatus(requestId, status) {
+            if (requestHistory[requestId]) {
+                requestHistory[requestId].status = status;
+                localStorage.setItem('requestHistory', JSON.stringify(requestHistory));
+                
+                // 요청 기록 화면이 표시 중인 경우 업데이트
+                if (currentScreen === 'request-history') {
+                    displayRequestHistory();
+                }
+            }
+        }
+
+        // 요청 기록 표시 함수
+        function displayRequestHistory() {
+            const historyList = document.getElementById('history-list');
+            const noHistory = document.getElementById('no-history');
+            
+            // 기존 기록 삭제 (no-history 부분은 남김)
+            while (historyList.childNodes.length > 1) {
+                historyList.removeChild(historyList.lastChild);
+            }
+            
+            // 현재 사용자의 요청만 필터링
+            const userRequests = Object.entries(requestHistory)
+                .filter(([id, request]) => request.user === currentUser)
+                .sort((a, b) => b[1].timestamp - a[1].timestamp); // 최신순 정렬
+            
+            if (userRequests.length === 0) {
+                noHistory.classList.remove('hidden');
+                return;
+            }
+            
+            noHistory.classList.add('hidden');
+            
+            userRequests.forEach(([id, request]) => {
+                const historyItem = document.createElement('div');
+                historyItem.className = 'history-item';
+                
+                // 상태 클래스 결정
+                const statusClass = 
+                    request.status === 'pending' ? 'status-pending' : 
+                    request.status === 'approved' ? 'status-approved' : 'status-rejected';
+                
+                // 상태 텍스트 결정
+                const statusText = 
+                    request.status === 'pending' ? '대기 중' : 
+                    request.status === 'approved' ? '승인됨' : '거절됨';
+                
+                const date = new Date(request.timestamp);
+                const dateString = `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                
+                historyItem.innerHTML = `
+                    <p><strong>${request.type === 'learning' ? '학습 체크' : '시간 요청'}</strong> <span class="${statusClass}">${statusText}</span></p>
+                    <p>${request.message}</p>
+                    <p><small>${dateString}</small></p>
+                `;
+                
+                historyList.appendChild(historyItem);
+            });
+        }
+
+        // 카카오톡 공유하기 함수 (업데이트된 버전)
+        function shareViaKakao() {
+            try {
+                const currentUrl = window.location.href.split('?')[0]; // 파라미터 제거
+                const approveUrl = `${currentUrl}?requestId=${currentRequestId}&response=approve`;
+                const rejectUrl = `${currentUrl}?requestId=${currentRequestId}&response=reject`;
+                
+                // 새로운 Kakao SDK 템플릿 메시지 방식
+                Kakao.Share.sendDefault({
+                    objectType: 'text',
+                    text: resultMessage,
+                    link: {
+                        mobileWebUrl: currentUrl,
+                        webUrl: currentUrl,
+                    },
+                    buttons: [
+                        {
+                          title: '승인',
+                          link: {
+                            mobileWebUrl: approveUrl,
+                            webUrl: approveUrl,
+                          },
+                        },
+                        {
+                          title: '거절',
+                          link: {
+                            mobileWebUrl: rejectUrl,
+                            webUrl: rejectUrl,
+                          },
+                        },
+                    ],
+                });
+            } catch (e) {
+                console.error('카카오톡 공유 실패:', e);
+                alert('카카오톡 공유에 실패했습니다. 대신 직접 승인/거절 버튼을 사용해 주세요.');
+            }
+        }
+
+        // 요청 처리 및 저장 함수
+        function processRequest(type, message) {
+            // 요청 ID 생성
+            const requestId = generateRequestId();
+            currentRequestId = requestId;
+            
+            // 메시지 설정
+            resultMessage = message;
+            
+            // 요청 정보 저장
+            requestHistory[requestId] = {
+                type: type,
+                user: currentUser,
+                message: message,
+                status: 'pending',
+                timestamp: Date.now()
+            };
+            
+            // 로컬 스토리지에 저장
+            localStorage.setItem('requestHistory', JSON.stringify(requestHistory));
+            
+            // 요청 ID 표시
+            document.getElementById('request-id').textContent = requestId;
+            document.getElementById('result-message').textContent = message;
+            
+            // 공유 화면으로 이동
+            showScreen('share-result');
+        }
+
+        // 공유하기 버튼 이벤트 리스너
+        document.getElementById('share-kakao').addEventListener('click', shareViaKakao);
+        
+        // 수동 승인/거절 버튼 이벤트 리스너
+        document.getElementById('manual-approve').addEventListener('click', function() {
+            updateRequestStatus(currentRequestId, 'approved');
+            const notificationDiv = document.getElementById('response-notification');
+            notificationDiv.textContent = '요청이 승인되었습니다!';
+            notificationDiv.className = 'response-alert approved';
+            notificationDiv.classList.remove('hidden');
+            
+            setTimeout(function() {
+                notificationDiv.classList.add('hidden');
+                showScreen('main-menu');
+            }, 2000);
+        });
+        
+        document.getElementById('manual-reject').addEventListener('click', function() {
+            updateRequestStatus(currentRequestId, 'rejected');
+            const notificationDiv = document.getElementById('response-notification');
+            notificationDiv.textContent = '요청이 거절되었습니다.';
+            notificationDiv.className = 'response-alert rejected';
+            notificationDiv.classList.remove('hidden');
+            
+            setTimeout(function() {
+                notificationDiv.classList.add('hidden');
+                showScreen('main-menu');
+            }, 2000);
+        });
+
+        // 학습 체크 폼 제출 처리
+        document.getElementById('learning-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const subject = document.getElementById('subject').value;
+            const progress = document.getElementById('progress').value;
+            
+            const message = `[학습 체크] ${currentUser}(이)가 "${subject}" ${progress} 완료했습니다.`;
+            processRequest('learning', message);
+            
+            // 폼 초기화
+            this.reset();
+        });
+
+        // 시간 요청 폼 제출 처리
+        document.getElementById('time-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const requestTime = document.getElementById('request-time').value;
+            const reason = document.getElementById('reason').value;
+            
+            const message = `[시간 요청] ${currentUser}(이)가 핸드폰/컴퓨터 사용 시간 ${requestTime}분을 요청했습니다.\n\n이유: ${reason}`;
+            processRequest('time', message);
+            
+            // 폼 초기화
+            this.reset();
+        });
+    </script>
 </body>
 </html>
