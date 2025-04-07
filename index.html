@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>학습 체크 사이트</title>
     <!-- 최신 카카오 SDK 추가 -->
-    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.5.0/kakao.min.js" integrity="sha384-kYPsUbBPlktVLVUkElESIEY4d2TISE7iRZ+oqEiaJVVYKrReTNfQoQw5f2gL7XtC" crossorigin="anonymous"></script>
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.5.0/kakao.min.js"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -145,17 +145,6 @@
         .reject-btn {
             background-color: #f44336;
         }
-        #debug-info {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-            font-family: monospace;
-            font-size: 12px;
-            white-space: pre-wrap;
-            display: none;
-        }
     </style>
 </head>
 <body>
@@ -248,9 +237,6 @@
         </div>
         
         <button class="btn back-btn" onclick="goBack('main-menu')">메인으로 돌아가기</button>
-        
-        <!-- 디버깅 정보 -->
-        <div id="debug-info"></div>
     </div>
 
     <!-- 요청 기록 화면 -->
@@ -262,124 +248,46 @@
         </div>
         <button class="btn back-btn" onclick="goBack('main-menu')">뒤로가기</button>
     </div>
-    
-    <!-- 개발자 모드 토글 (개발자 정보 표시) -->
-    <div style="text-align: center; margin-top: 20px;">
-        <button id="toggle-debug" style="padding: 5px 10px; font-size: 12px; background-color: #f8f9fa; border: 1px solid #ddd; border-radius: 3px; cursor: pointer;">
-            개발자 정보 토글
-        </button>
-    </div>
 
     <script>
         let currentUser = '';
         let currentScreen = 'kakao-channel-container';
         let resultMessage = '';
         let currentRequestId = '';
-        let debugMode = false;
         
         // 요청 기록 저장소
         const requestHistory = JSON.parse(localStorage.getItem('requestHistory') || '{}');
         
-        // 디버그 로그 함수
-        function debugLog(message, data = null) {
-            if (console && console.log) {
-                console.log(message, data);
-            }
-            
-            const debugInfo = document.getElementById('debug-info');
-            if (debugInfo) {
-                const timestamp = new Date().toISOString();
-                let logMessage = timestamp + ': ' + message;
-                
-                if (data) {
-                    if (typeof data === 'object') {
-                        try {
-                            logMessage += '\n' + JSON.stringify(data, null, 2);
-                        } catch (e) {
-                            logMessage += '\n' + 'Object conversion failed: ' + e.message;
-                        }
-                    } else {
-                        logMessage += '\n' + data;
-                    }
-                }
-                
-                debugInfo.innerHTML += logMessage + '\n\n';
-                
-                // 스크롤을 아래로 이동
-                debugInfo.scrollTop = debugInfo.scrollHeight;
-            }
-        }
-        
         // 응답 처리 결과 확인
         window.onload = function() {
-            debugLog('앱 초기화 중...');
-            
-            try {
-                // 최신 Kakao SDK 초기화 방식
-                if (!Kakao.isInitialized()) {
-                    debugLog('Kakao SDK 초기화 시도');
-                    Kakao.init('d804f2ae7ecd4f0c313b473906da6bb8'); // 발급받은 JavaScript 키 입력
-                    debugLog('Kakao SDK 초기화 완료: ' + Kakao.isInitialized());
-                } else {
-                    debugLog('Kakao SDK 이미 초기화됨');
-                }
-                
-                // 채널 버튼 생성
-                displayKakaoButtons();
-                
-                // URL 파라미터에서 응답 확인
-                checkResponseParameters();
-                
-                // 현재 사이트 정보 기록
-                debugLog('현재 사이트 정보', {
-                    href: window.location.href,
-                    protocol: window.location.protocol,
-                    host: window.location.host,
-                    pathname: window.location.pathname,
-                    search: window.location.search,
-                    hash: window.location.hash
-                });
-            } catch (e) {
-                debugLog('초기화 오류', e);
-                console.error('초기화 오류:', e);
+            // 최신 Kakao SDK 초기화 방식
+            if (!Kakao.isInitialized()) {
+                Kakao.init('d804f2ae7ecd4f0c313b473906da6bb8'); // 발급받은 JavaScript 키 입력
             }
+            
+            // 채널 버튼 생성
+            displayKakaoButtons();
+            
+            // URL 파라미터에서 응답 확인
+            checkResponseParameters();
         };
-        
-        // 개발자 모드 토글
-        document.getElementById('toggle-debug').addEventListener('click', function() {
-            debugMode = !debugMode;
-            const debugInfo = document.getElementById('debug-info');
-            debugInfo.style.display = debugMode ? 'block' : 'none';
-            debugLog('개발자 모드 ' + (debugMode ? '활성화' : '비활성화'));
-        });
         
         // 카카오 버튼 표시 함수
         function displayKakaoButtons() {
             try {
-                debugLog('카카오 채널 버튼 생성 시도');
-                
                 // 채널 추가 버튼
                 Kakao.Channel.createAddChannelButton({
                     container: '#kakao-add-channel-button',
                     channelPublicId: '_ddyxfn', // 채널 ID 입력
-                    size: 'large',
-                    supportMultipleDensities: true
                 });
                 
                 // 채널 채팅 버튼
                 Kakao.Channel.createChatButton({
                     container: '#kakao-chat-channel-button',
                     channelPublicId: '_ddyxfn', // 채널 ID 입력
-                    size: 'large',
-                    supportMultipleDensities: true
                 });
-                
-                debugLog('카카오 채널 버튼 생성 완료');
             } catch (e) {
-                debugLog('카카오 버튼 생성 실패', e);
                 console.error('카카오 버튼 생성 실패:', e);
-                
-                // 대체 버튼 생성
                 document.getElementById('kakao-add-channel-button').innerHTML = 
                     '<a href="https://pf.kakao.com/_ddyxfn" target="_blank" class="btn kakao-btn">카카오톡 채널 추가하기</a>';
                 document.getElementById('kakao-chat-channel-button').innerHTML = 
@@ -393,8 +301,6 @@
             const requestId = urlParams.get('requestId');
             const response = urlParams.get('response');
             
-            debugLog('URL 파라미터 확인', { requestId, response });
-            
             if (requestId && response) {
                 const notificationDiv = document.getElementById('response-notification');
                 
@@ -402,12 +308,10 @@
                     notificationDiv.textContent = '요청이 승인되었습니다!';
                     notificationDiv.className = 'response-alert approved';
                     updateRequestStatus(requestId, 'approved');
-                    debugLog('요청 승인됨', { requestId });
                 } else if (response === 'reject') {
                     notificationDiv.textContent = '요청이 거절되었습니다.';
                     notificationDiv.className = 'response-alert rejected';
                     updateRequestStatus(requestId, 'rejected');
-                    debugLog('요청 거절됨', { requestId });
                 }
                 
                 notificationDiv.classList.remove('hidden');
@@ -419,7 +323,6 @@
                 
                 // URL에서 파라미터 제거 (브라우저 히스토리에는 남음)
                 window.history.replaceState({}, document.title, window.location.pathname);
-                debugLog('URL 파라미터 제거됨');
             }
         }
 
@@ -427,7 +330,6 @@
         function selectUser(user) {
             currentUser = user;
             document.getElementById('selected-user').textContent = user;
-            debugLog('사용자 선택됨', { user });
             
             // 실력 단어 옵션 처리 (지호만 볼 수 있음)
             const skillWordOption = document.getElementById('skill-word-option');
@@ -444,7 +346,6 @@
         function showScreen(screenId) {
             document.getElementById(currentScreen).classList.add('hidden');
             document.getElementById(screenId).classList.remove('hidden');
-            debugLog('화면 전환', { from: currentScreen, to: screenId });
             currentScreen = screenId;
             
             // 요청 기록 화면인 경우 히스토리 표시
@@ -455,15 +356,12 @@
 
         // 뒤로가기 함수
         function goBack(screenId) {
-            debugLog('뒤로가기', { to: screenId });
             showScreen(screenId);
         }
 
         // 고유 ID 생성 함수
         function generateRequestId() {
-            const id = Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
-            debugLog('요청 ID 생성됨', { id });
-            return id;
+            return Date.now().toString(36) + Math.random().toString(36).substr(2, 5);
         }
 
         // 요청 상태 업데이트 함수
@@ -471,14 +369,11 @@
             if (requestHistory[requestId]) {
                 requestHistory[requestId].status = status;
                 localStorage.setItem('requestHistory', JSON.stringify(requestHistory));
-                debugLog('요청 상태 업데이트', { requestId, status });
                 
                 // 요청 기록 화면이 표시 중인 경우 업데이트
                 if (currentScreen === 'request-history') {
                     displayRequestHistory();
                 }
-            } else {
-                debugLog('요청 ID를 찾을 수 없음', { requestId });
             }
         }
 
@@ -492,14 +387,10 @@
                 historyList.removeChild(historyList.lastChild);
             }
             
-            debugLog('요청 기록 표시 시작', { user: currentUser });
-            
             // 현재 사용자의 요청만 필터링
             const userRequests = Object.entries(requestHistory)
                 .filter(([id, request]) => request.user === currentUser)
                 .sort((a, b) => b[1].timestamp - a[1].timestamp); // 최신순 정렬
-            
-            debugLog('필터링된 요청 수', { count: userRequests.length });
             
             if (userRequests.length === 0) {
                 noHistory.classList.remove('hidden');
@@ -533,20 +424,14 @@
                 
                 historyList.appendChild(historyItem);
             });
-            
-            debugLog('요청 기록 표시 완료');
         }
 
         // 카카오톡 공유하기 함수 (업데이트된 버전)
         function shareViaKakao() {
             try {
-                debugLog('카카오톡 공유 시도');
-                
                 const currentUrl = window.location.href.split('?')[0]; // 파라미터 제거
                 const approveUrl = `${currentUrl}?requestId=${currentRequestId}&response=approve`;
                 const rejectUrl = `${currentUrl}?requestId=${currentRequestId}&response=reject`;
-                
-                debugLog('생성된 URL', { approveUrl, rejectUrl });
                 
                 // 새로운 Kakao SDK 템플릿 메시지 방식
                 Kakao.Share.sendDefault({
@@ -572,16 +457,8 @@
                           },
                         },
                     ],
-                })
-                .then(function(response) {
-                    debugLog('카카오톡 공유 성공', response);
-                })
-                .catch(function(error) {
-                    debugLog('카카오톡 공유 실패', error);
-                    alert('카카오톡 공유에 실패했습니다: ' + error.message);
                 });
             } catch (e) {
-                debugLog('카카오톡 공유 예외 발생', e);
                 console.error('카카오톡 공유 실패:', e);
                 alert('카카오톡 공유에 실패했습니다. 대신 직접 승인/거절 버튼을 사용해 주세요.');
             }
@@ -595,8 +472,6 @@
             
             // 메시지 설정
             resultMessage = message;
-            
-            debugLog('요청 처리', { type, message, requestId });
             
             // 요청 정보 저장
             requestHistory[requestId] = {
@@ -624,8 +499,6 @@
         // 수동 승인/거절 버튼 이벤트 리스너
         document.getElementById('manual-approve').addEventListener('click', function() {
             updateRequestStatus(currentRequestId, 'approved');
-            debugLog('수동 승인', { requestId: currentRequestId });
-            
             const notificationDiv = document.getElementById('response-notification');
             notificationDiv.textContent = '요청이 승인되었습니다!';
             notificationDiv.className = 'response-alert approved';
@@ -639,8 +512,6 @@
         
         document.getElementById('manual-reject').addEventListener('click', function() {
             updateRequestStatus(currentRequestId, 'rejected');
-            debugLog('수동 거절', { requestId: currentRequestId });
-            
             const notificationDiv = document.getElementById('response-notification');
             notificationDiv.textContent = '요청이 거절되었습니다.';
             notificationDiv.className = 'response-alert rejected';
@@ -658,8 +529,6 @@
             const subject = document.getElementById('subject').value;
             const progress = document.getElementById('progress').value;
             
-            debugLog('학습 체크 폼 제출', { subject, progress });
-            
             const message = `[학습 체크] ${currentUser}(이)가 "${subject}" ${progress} 완료했습니다.`;
             processRequest('learning', message);
             
@@ -672,8 +541,6 @@
             e.preventDefault();
             const requestTime = document.getElementById('request-time').value;
             const reason = document.getElementById('reason').value;
-            
-            debugLog('시간 요청 폼 제출', { requestTime, reason });
             
             const message = `[시간 요청] ${currentUser}(이)가 핸드폰/컴퓨터 사용 시간 ${requestTime}분을 요청했습니다.\n\n이유: ${reason}`;
             processRequest('time', message);
